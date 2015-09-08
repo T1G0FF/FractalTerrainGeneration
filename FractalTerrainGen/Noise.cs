@@ -71,8 +71,11 @@ namespace Noise
                 {
                     for (int x = Stride; x < Side; x += Stride)
                     {
-                        int Current = getRandomElevation((int)Math.Floor(DeltaTerrain * TerrainHeight)) + avgSquareValues(ref output, x, y, Stride);
-                        output[x, y] = (byte)Current;
+                        int NewMaxTerrainHeight = (int)Math.Floor(DeltaTerrain * TerrainHeight);
+                        int ElevationSeed = getRandomElevation(NewMaxTerrainHeight);
+                        int ExistingAverage = avgSquareValues(ref output, x, y, Stride);
+                        int NewTerrainHeight = ElevationSeed + ExistingAverage;
+                        output[x, y] = (byte)(NewTerrainHeight % 255);
                         x += Stride;
                     }
                     y += Stride;
@@ -86,8 +89,11 @@ namespace Noise
                     {
                         if (toggle && x == 0) { x += Stride; }
 
-                        int Current = getRandomElevation((int)Math.Floor(DeltaTerrain * TerrainHeight)) + avgDiamondValues(ref output, x, y, Stride);
-                        output[x, y] = (byte)Current;
+                        int NewMaxTerrainHeight = (int)Math.Floor(DeltaTerrain * TerrainHeight);
+                        int ElevationSeed = getRandomElevation(NewMaxTerrainHeight);
+                        int ExistingAverage = avgDiamondValues(ref output, x, y, Stride);
+                        int NewTerrainHeight = ElevationSeed + ExistingAverage;
+                        output[x, y] = (byte)(NewTerrainHeight % 255);
 
                         // Wraps Edges
                         if (x == 0) { output[Size, y] = output[x, y]; }
