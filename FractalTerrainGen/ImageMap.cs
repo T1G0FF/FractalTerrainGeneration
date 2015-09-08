@@ -69,98 +69,95 @@ namespace FractalTerrainGen
         #endregion
 
         #region Private Methods
-        private void SaveToImage(string filePath, string function, bool overwrite)
+        private void SaveToImage(string folderPath, string function, bool overwrite)
         {
-            Bitmap TerrainImage;
-            string filename;
+            string fileName;
+            string filePath;
+            Func<byte, Color> delegateName;
 
             switch (function)
             {
                 case "Greyscale":
-                    filename = String.Format("{0}{1}_{2}_{3:F2}_{4}_noisemap.png", filePath, Seed, Size, Scale, Passes);
-                    if (File.Exists(filename) == false || overwrite)
-                    {
-                        TerrainImage = ToImage(filePath, GreyScale);
-                        TerrainImage.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
-                    }
+                    fileName = String.Format("{0}_{1}_{2:F2}_{3}_noisemap.png", Seed, Size, Scale, Passes);
+                    delegateName = GreyScale;
                     break;
 
                 case "Color":
                 case "Colour":
-                    filename = String.Format("{0}{1}_{2}_{3:F2}_{4:F2}_{5}.png", filePath, Seed, Size, Scale, SealevelScale, Passes);
-                    if (File.Exists(filename) == false || overwrite)
-                    {
-                        TerrainImage = ToImage(filePath, BlockGradient);
-                        TerrainImage.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
-                    }
+                    fileName = String.Format("{0}_{1}_{2:F2}_{3:F2}_{4}.png", Seed, Size, Scale, SealevelScale, Passes);
+                    delegateName = BlockGradient;
                     break;
 
                 case "Texture":
-                    filename = String.Format("{0}{1}_{2}_{3:F2}_{4:F2}_{5}_texture.png", filePath, Seed, Size, Scale, SealevelScale, Passes);
-                    if (File.Exists(filename) == false || overwrite)
-                    {
-                        TerrainImage = ToImage(filePath, TexturedBlockGradient);
-                        TerrainImage.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
-                    }
+                    fileName = String.Format("{0}_{1}_{2:F2}_{3:F2}_{4}_texture.png", Seed, Size, Scale, SealevelScale, Passes);
+                    delegateName = TexturedBlockGradient;
                     break;
 
                 case "Smooth":
-                    filename = String.Format("{0}{1}_{2}_{3:F2}_{4:F2}_{5}_smooth.png", filePath, Seed, Size, Scale, SealevelScale, Passes);
-                    if (File.Exists(filename) == false || overwrite)
-                    {
-                        TerrainImage = ToImage(filePath, SmoothGradient);
-                        TerrainImage.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
-                    }
+                    fileName = String.Format("{0}_{1}_{2:F2}_{3:F2}_{4}_smooth.png", Seed, Size, Scale, SealevelScale, Passes);
+                    delegateName = SmoothGradient;
                     break;
 
                 default:
-                    break;
+                    return;
+            }
+
+            if (!Directory.Exists(folderPath)) { Directory.CreateDirectory(folderPath); }
+
+            filePath = folderPath + fileName;
+
+            if (File.Exists(filePath) == false || overwrite)
+            {
+                Bitmap TerrainImage = ToImage(fileName, delegateName);
+                TerrainImage.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
             }
         }
 
-        private void SingleMap(string filePath, string function)
+        private void SingleMap(string folderPath, string function)
         {
-            Bitmap TerrainImage;
-            string filename;
+            string fileName;
+            string filePath;
+            Func<byte, Color> delegateName;
 
             switch (function)
             {
                 case "Greyscale":
-                    filename = String.Format("{0}CurrentMap_noisemap.png", filePath);
-                    TerrainImage = ToImage(filePath, GreyScale);
-                    TerrainImage.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
+                    fileName = String.Format("CurrentMap_noisemap.png");
+                    delegateName = GreyScale;
                     break;
 
                 case "Color":
                 case "Colour":
-                    filename = String.Format("{0}CurrentMap.png", filePath);
-                    TerrainImage = ToImage(filePath, BlockGradient);
-                    TerrainImage.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
+                    fileName = String.Format("CurrentMap.png");
+                    delegateName = BlockGradient;
                     break;
 
                 case "Texture":
-                    filename = String.Format("{0}CurrentMap_texture.png", filePath);
-                    TerrainImage = ToImage(filePath, TexturedBlockGradient);
-                    TerrainImage.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
+                    fileName = String.Format("CurrentMap_texture.png");
+                    delegateName = TexturedBlockGradient;
                     break;
 
                 case "Smooth":
-                    filename = String.Format("{0}CurrentMap_smooth.png", filePath);
-                    TerrainImage = ToImage(filePath, SmoothGradient);
-                    TerrainImage.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
+                    fileName = String.Format("CurrentMap_smooth.png");
+                    delegateName = SmoothGradient;
                     break;
 
                 default:
-                    break;
+                    return;
             }
+
+            if (!Directory.Exists(folderPath)) { Directory.CreateDirectory(folderPath); }
+
+            filePath = folderPath + fileName;
+
+            Bitmap TerrainImage = ToImage(fileName, delegateName);
+            TerrainImage.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
         }
 
-        private Bitmap ToImage(string filePath, Func<byte, Color> getTerrainColour)
+        private Bitmap ToImage(string fileName, Func<byte, Color> getTerrainColour)
         {
-            if (!Directory.Exists(filePath)) { Directory.CreateDirectory(filePath); }
-
             Bitmap TerrainImage = new Bitmap(Size, Size);
-            Console.WriteLine("Writing to Image [{0}_{1}_{2:F2}_{3:F2}.png]", Seed, Size, Scale, SealevelScale);
+            Console.WriteLine("Writing to Image [{0}]", fileName);
             int xMax = TerrainMap.GetUpperBound(0) + 1; // Returns Index
             int yMax = TerrainMap.GetUpperBound(1) + 1; // Number of elements = Index + 1
             float percent = Size / 10;
@@ -256,6 +253,7 @@ namespace FractalTerrainGen
             else if (currentElevation <= Mountains)
             {
                 double elev = Value.Normalise(currentElevation, Sandlevel, TERRAINHEIGHT, 0.25, 0.75);
+                //double sat = Block.GetSaturation();
                 Block = RGBHSL.SetSaturation(Block, elev);
                 return Block;
             }
