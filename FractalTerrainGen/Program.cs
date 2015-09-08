@@ -6,17 +6,21 @@ namespace FractalTerrainGen
     class Game
     {
         // Program properties
-        static string userprofile   = Environment.GetEnvironmentVariable("USERPROFILE");
-        static string filePath      = userprofile + @"\Desktop\Maps\";
+        static string userprofile = Environment.GetEnvironmentVariable("USERPROFILE");
+        static string filePath = userprofile + @"\Desktop\Maps\";
         static bool regenRequired = true;
         static bool consoleMode = false;
-        static bool saveAll     = false;
+        static bool saveAll = false;
+        static bool saveNoise = false;
+        static bool saveRegular = false;
+        static bool saveTexture = false;
+        static bool singleFileMode = true;
         
         // Shared
         static int currentSeed = Guid.NewGuid().GetHashCode();
         static int currentPasses = BaseMap.DEFAULTPASSES;
         static float currentScale = BaseMap.DEFAULTSCALE;
-        
+
         const float DELTA_VERYSMALL = 0.01F;
         const float DELTA_SMALL = 0.1F;
         const float DELTA_NORMAL = 1.0F;
@@ -26,13 +30,13 @@ namespace FractalTerrainGen
         // Image Map
         static ImageMap testImageMap;
         static bool newSealevel = false;
-        static int currentImageSize     = ImageMap.DEFAULTSIZE;
-        static float currentSealevel    = ImageMap.DEFAULTSEALEVEL;
+        static int currentImageSize = ImageMap.DEFAULTSIZE;
+        static float currentSealevel = ImageMap.DEFAULTSEALEVEL;
 
         // ASCII Map
         static ASCIIMap testASCIIMap;
-        static int currentASCIISize     = ASCIIMap.DEFAULTSIZE;
-        
+        static int currentASCIISize = ASCIIMap.DEFAULTSIZE;
+
         static void Main(string[] args)
         {
             getArguments(args);
@@ -66,9 +70,25 @@ namespace FractalTerrainGen
 
                     switch (arg)
                     {
-                        case "-S":
+                        case "-SA":
                         case "--SAVEALL":
                             saveAll = true;
+                            singleFileMode = false;
+                            break;
+                        case "-SN":
+                        case "--SAVENOISE":
+                            saveNoise = true;
+                            singleFileMode = false;
+                            break;
+                        case "-SR":
+                        case "--SAVEREGULAR":
+                            saveRegular = true;
+                            singleFileMode = false;
+                            break;
+                        case "-ST":
+                        case "--SAVETEXTURE":
+                            saveTexture = true;
+                            singleFileMode = false;
                             break;
                         case "-C":
                         case "--CONSOLE":
@@ -76,7 +96,6 @@ namespace FractalTerrainGen
                             break;
                     }
                 }
-
             }
         }
 
@@ -91,24 +110,34 @@ namespace FractalTerrainGen
 
         static void ImageMode()
         {
-            if(regenRequired)
+            if (regenRequired)
             {
                 testImageMap = new ImageMap(currentSeed, currentImageSize, currentScale, currentSealevel, currentPasses);
 
-                if (saveAll)
+                if (singleFileMode)
                 {
-                    if (newSealevel == false)
-                    {
-                        testImageMap.SaveToImage(filePath, "Greyscale", ImageMap.WriteOption.SaveAll);
-                        Console.Clear();
-                        newSealevel = false;
-                    }
-
-                    testImageMap.SaveToImage(filePath, "Color", ImageMap.WriteOption.SaveAll);
+                    testImageMap.SaveToImage(filePath, "Color");
                 }
                 else
                 {
-                    testImageMap.SaveToImage(filePath, "Color");
+                    if (saveAll || saveNoise)
+                    {
+                        if (newSealevel == false)
+                        {
+                            testImageMap.SaveToImage(filePath, "Greyscale", ImageMap.WriteOption.SaveSeperate);
+                            newSealevel = false;
+                        }
+                    }
+
+                    if (saveAll || saveRegular)
+                    {
+                        testImageMap.SaveToImage(filePath, "Colour", ImageMap.WriteOption.SaveSeperate);
+                    }
+
+                    if (saveAll || saveTexture)
+                    {
+                        testImageMap.SaveToImage(filePath, "Texture", ImageMap.WriteOption.SaveSeperate);
+                    }
                 }
             }
         }
@@ -116,8 +145,6 @@ namespace FractalTerrainGen
         static bool getKeys()
         {
             bool cont;
-
-            Console.Clear();
 
             if (consoleMode)
             {
@@ -127,9 +154,11 @@ namespace FractalTerrainGen
             {
                 cont = getImageKeys();
             }
-                
+
+            Console.Clear();
+
             return cont;
-        }   
+        }
 
         static bool getConsoleKeys()
         {
@@ -142,7 +171,7 @@ namespace FractalTerrainGen
             Console.WriteLine("E : Set S(e)ed to a specific value");
             Console.WriteLine("C : Set S(c)ale to a specific value");
             Console.WriteLine("P : Set the number of noise generation (P)asses");
-            
+
             Console.WriteLine("F : Save Noise values to CSV (F)ile");
             Console.WriteLine("D : Reset to (D)efaults");
             Console.WriteLine("Q | Esc : Quit");
@@ -211,9 +240,9 @@ namespace FractalTerrainGen
                     break;
 
                 case "D":
-                    currentASCIISize    = ASCIIMap.DEFAULTSIZE;
-                    currentPasses       = BaseMap.DEFAULTPASSES;
-                    currentScale        = BaseMap.DEFAULTSCALE;
+                    currentASCIISize = ASCIIMap.DEFAULTSIZE;
+                    currentPasses = BaseMap.DEFAULTPASSES;
+                    currentScale = BaseMap.DEFAULTSCALE;
                     break;
 
                 case "Q":
@@ -348,10 +377,10 @@ namespace FractalTerrainGen
                     break;
 
                 case "D":
-                    currentImageSize    = ImageMap.DEFAULTSIZE;
-                    currentSealevel     = ImageMap.DEFAULTSEALEVEL;
-                    currentPasses       = BaseMap.DEFAULTPASSES;
-                    currentScale        = BaseMap.DEFAULTSCALE;
+                    currentImageSize = ImageMap.DEFAULTSIZE;
+                    currentSealevel = ImageMap.DEFAULTSEALEVEL;
+                    currentPasses = BaseMap.DEFAULTPASSES;
+                    currentScale = BaseMap.DEFAULTSCALE;
                     break;
 
                 case "Q":

@@ -14,7 +14,7 @@ namespace FractalTerrainGen
         public const float DEFAULTSEALEVEL = 0.61F;
         public const byte TERRAINHEIGHT = byte.MaxValue;
 
-        public enum WriteOption { None, Overwrite, SaveAll }
+        public enum WriteOption { None, Overwrite, SaveSeperate }
         
         public float SealevelScale { get; private set; }
         byte Sealevel { get { return (byte)Math.Floor((double)TERRAINHEIGHT * SealevelScale); } }
@@ -53,7 +53,7 @@ namespace FractalTerrainGen
             switch (option)
             {
                 default:
-                case WriteOption.SaveAll:
+                case WriteOption.SaveSeperate:
                     SaveToImage(filePath, function, false);
                     break;
 
