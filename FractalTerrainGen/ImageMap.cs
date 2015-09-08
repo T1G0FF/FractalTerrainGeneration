@@ -161,8 +161,8 @@ namespace FractalTerrainGen
 
             Bitmap TerrainImage = new Bitmap(Size, Size);
             Console.WriteLine("Writing to Image [{0}_{1}_{2:F2}_{3:F2}.png]", Seed, Size, Scale, SealevelScale);
-            int xMax = TerrainMap.GetUpperBound(0);
-            int yMax = TerrainMap.GetUpperBound(1);
+            int xMax = TerrainMap.GetUpperBound(0) + 1; // Returns Index
+            int yMax = TerrainMap.GetUpperBound(1) + 1; // Number of elements = Index + 1
             float percent = Size / 10;
             int pass = 0;
             Console.Write("\r" + "{0,-10}", "░░░░░░░░░░");
