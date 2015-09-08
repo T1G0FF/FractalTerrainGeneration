@@ -40,8 +40,6 @@ namespace FractalTerrainGen
 
             while (cont)
             {
-                Console.Clear();
-
                 if (consoleMode)
                 {
                     ConsoleMode();
@@ -118,6 +116,8 @@ namespace FractalTerrainGen
         static bool getKeys()
         {
             bool cont;
+
+            Console.Clear();
 
             if (consoleMode)
             {
