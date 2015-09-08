@@ -47,12 +47,12 @@ namespace FractalTerrainGen
                 if (consoleMode)
                 {
                     ConsoleMode();
-                    Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Passes: {3}", currentSeed, currentASCIISize, currentScale, currentPasses);
+                    Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Passes: {3}", testASCIIMap.Seed, testASCIIMap.Size, testASCIIMap.Scale, testASCIIMap.Passes);
                 }
                 else
                 {
                     ImageMode();
-                    Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Sealevel: {3} | Passes: {4}", currentSeed, currentImageSize, currentScale, currentSealevel, currentPasses);
+                    Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Sealevel: {3} | Passes: {4}", testImageMap.Seed, testImageMap.Size, testImageMap.Scale, testImageMap.SealevelScale, testImageMap.Passes);
                 }
 
                 cont = getKeys();
