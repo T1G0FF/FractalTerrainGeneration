@@ -34,9 +34,8 @@ namespace FractalTerrainGen
         
         static void Main(string[] args)
         {
-            bool cont = true;
-
             getArguments(args);
+            bool cont = getKeys();
 
             while (cont)
             {
