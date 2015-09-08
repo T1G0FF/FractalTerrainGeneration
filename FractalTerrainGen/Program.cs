@@ -8,6 +8,7 @@ namespace FractalTerrainGen
         // Program properties
         static string userprofile   = Environment.GetEnvironmentVariable("USERPROFILE");
         static string filePath      = userprofile + @"\Desktop\Maps\";
+        static bool regenRequired = true;
         static bool consoleMode = false;
         static bool saveAll     = false;
         
@@ -83,28 +84,34 @@ namespace FractalTerrainGen
 
         static void ConsoleMode()
         {
-            testASCIIMap = new ASCIIMap(currentSeed, currentASCIISize, currentScale, currentPasses);
+            if (regenRequired)
+            {
+                testASCIIMap = new ASCIIMap(currentSeed, currentASCIISize, currentScale, currentPasses);
+            }
             testASCIIMap.Display();
         }
 
         static void ImageMode()
         {
-            testImageMap = new ImageMap(currentSeed, currentImageSize, currentScale, currentSealevel, currentPasses);
-
-            if (saveAll)
+            if(regenRequired)
             {
-                if (newSealevel == false)
+                testImageMap = new ImageMap(currentSeed, currentImageSize, currentScale, currentSealevel, currentPasses);
+
+                if (saveAll)
                 {
-                    testImageMap.SaveToImage(filePath, "Greyscale", ImageMap.WriteOption.SaveAll);
-                    Console.Clear();
-                    newSealevel = false;
-                }
+                    if (newSealevel == false)
+                    {
+                        testImageMap.SaveToImage(filePath, "Greyscale", ImageMap.WriteOption.SaveAll);
+                        Console.Clear();
+                        newSealevel = false;
+                    }
 
-                testImageMap.SaveToImage(filePath, "Color", ImageMap.WriteOption.SaveAll);
-            }
-            else
-            {
-                testImageMap.SaveToImage(filePath, "Color");
+                    testImageMap.SaveToImage(filePath, "Color", ImageMap.WriteOption.SaveAll);
+                }
+                else
+                {
+                    testImageMap.SaveToImage(filePath, "Color");
+                }
             }
         }
 
@@ -126,6 +133,8 @@ namespace FractalTerrainGen
 
         static bool getConsoleKeys()
         {
+            regenRequired = true;
+
             Console.WriteLine("===== MENU =====");
             Console.WriteLine("Space : Generate (N)ew Seed");
 
@@ -133,9 +142,7 @@ namespace FractalTerrainGen
             Console.WriteLine("E : Set S(e)ed to a specific value");
             Console.WriteLine("C : Set S(c)ale to a specific value");
             Console.WriteLine("P : Set the number of noise generation (P)asses");
-
-            Console.WriteLine("R : (R)egenerate");
-
+            
             Console.WriteLine("F : Save Noise values to CSV (F)ile");
             Console.WriteLine("D : Reset to (D)efaults");
             Console.WriteLine("Q | Esc : Quit");
@@ -198,12 +205,9 @@ namespace FractalTerrainGen
                     currentPasses = pass;
                     break;
                 //----------------------------
-                case "R":
-                default:
-                    break;
-                //----------------------------
                 case "F":
                     testASCIIMap.ToFile(filePath);
+                    regenRequired = false;
                     break;
 
                 case "D":
@@ -231,13 +235,18 @@ namespace FractalTerrainGen
                 case "OEM1": // ;
                     currentScale -= DELTA_SMALL;
                     break;
+                //----------------------------
+                default:
+                    regenRequired = false;
+                    break;
             }
-
             return true;
         }
 
         static bool getImageKeys()
         {
+            regenRequired = true;
+
             Console.WriteLine("===== MENU =====");
             Console.WriteLine("Space : Generate (N)ew Seed");
 
@@ -315,22 +324,27 @@ namespace FractalTerrainGen
                 //----------------------------
                 case "N":
                     testImageMap.SaveToImage(filePath, "Greyscale", ImageMap.WriteOption.Overwrite);
+                    regenRequired = false;
                     break;
 
                 case "R":
                     testImageMap.SaveToImage(filePath, "Color", ImageMap.WriteOption.Overwrite);
+                    regenRequired = false;
                     break;
 
                 case "T":
                     testImageMap.SaveToImage(filePath, "Texture", ImageMap.WriteOption.Overwrite);
+                    regenRequired = false;
                     break;
 
                 case "M":
                     testImageMap.SaveToImage(filePath, "Smooth", ImageMap.WriteOption.Overwrite);
+                    regenRequired = false;
                     break;
                 //----------------------------
                 case "F":
                     testImageMap.ToFile(filePath);
+                    regenRequired = false;
                     break;
 
                 case "D":
@@ -379,8 +393,9 @@ namespace FractalTerrainGen
                 case "OEMCOMMA": // ,
                     currentImageSize /= 2;
                     break;
-                
+                //----------------------------
                 default:
+                    regenRequired = false;
                     break;
             }
 
