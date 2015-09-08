@@ -29,9 +29,17 @@ namespace FractalTerrainGen
         public ImageMap(int seed, int size = DEFAULTSIZE, float scale = DEFAULTSCALE, float sealevel = DEFAULTSEALEVEL, int passes = DEFAULTPASSES)
         {
             size = (int)Value.Clamp(size, 8, 65536);
-            int Power = (int)Math.Log(size, 2);
-            Size = (int)Math.Pow(2, Power);
+            
+            for(int Power = 16; Power >= 3; Power--)
+            {
+                int powerOfTwo = (int)Math.Pow(2, Power);
 
+                if (size > (powerOfTwo * 0.9F))
+                {
+                    Size = powerOfTwo;
+                    break;
+                }
+            }
 
             Scale = (float)Value.Clamp(scale, 255);
 
