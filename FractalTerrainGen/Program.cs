@@ -1,5 +1,6 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace FractalTerrainGen
 {
@@ -47,12 +48,10 @@ namespace FractalTerrainGen
                 if (consoleMode)
                 {
                     ConsoleMode();
-                    Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Passes: {3}", testASCIIMap.Seed, testASCIIMap.Size, testASCIIMap.Scale, testASCIIMap.Passes);
                 }
                 else
                 {
                     ImageMode();
-                    Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Sealevel: {3} | Passes: {4}", testImageMap.Seed, testImageMap.Size, testImageMap.Scale, testImageMap.SealevelScale, testImageMap.Passes);
                 }
 
                 cont = getKeys();
@@ -104,6 +103,7 @@ namespace FractalTerrainGen
             if (regenRequired)
             {
                 testASCIIMap = new ASCIIMap(currentSeed, currentASCIISize, currentScale, currentPasses);
+                Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Passes: {3}", testASCIIMap.Seed, testASCIIMap.Size, testASCIIMap.Scale, testASCIIMap.Passes);
             }
             testASCIIMap.Display();
         }
@@ -120,25 +120,41 @@ namespace FractalTerrainGen
                 }
                 else
                 {
+                    List<Task> imgTasksList = new List<Task>();
+
                     if (saveAll || saveNoise)
                     {
                         if (newSealevel == false)
                         {
-                            testImageMap.SaveToImage(filePath, "Greyscale", ImageMap.WriteOption.SaveSeperate);
+                            imgTasksList.Add(
+                                Task.Factory.StartNew(() =>
+                                    testImageMap.SaveToImage(filePath, "Greyscale", ImageMap.WriteOption.SaveSeperate)
+                                ));
                             newSealevel = false;
                         }
                     }
 
                     if (saveAll || saveRegular)
                     {
-                        testImageMap.SaveToImage(filePath, "Colour", ImageMap.WriteOption.SaveSeperate);
+                        imgTasksList.Add(
+                                Task.Factory.StartNew(() =>
+                                    testImageMap.SaveToImage(filePath, "Colour", ImageMap.WriteOption.SaveSeperate)
+                                ));
                     }
 
                     if (saveAll || saveTexture)
                     {
-                        testImageMap.SaveToImage(filePath, "Texture", ImageMap.WriteOption.SaveSeperate);
+                        imgTasksList.Add(
+                                Task.Factory.StartNew(() =>
+                                    testImageMap.SaveToImage(filePath, "Texture", ImageMap.WriteOption.SaveSeperate)
+                                ));
                     }
+
+                    Task[] imgTasks = imgTasksList.ToArray();
+
+                    Task.WaitAll(imgTasks);
                 }
+                Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Sealevel: {3} | Passes: {4}", testImageMap.Seed, testImageMap.Size, testImageMap.Scale, testImageMap.SealevelScale, testImageMap.Passes);
             }
         }
 
@@ -155,8 +171,6 @@ namespace FractalTerrainGen
                 cont = getImageKeys();
             }
 
-            Console.Clear();
-
             return cont;
         }
 
@@ -165,7 +179,7 @@ namespace FractalTerrainGen
             regenRequired = true;
 
             Console.WriteLine("===== MENU =====");
-            Console.WriteLine("Space : Generate (N)ew Seed");
+            Console.WriteLine("Space : Generate New Seed");
 
             Console.WriteLine("S : Set (S)ize to a specific value");
             Console.WriteLine("E : Set S(e)ed to a specific value");
@@ -181,6 +195,7 @@ namespace FractalTerrainGen
 
 
             string key = Console.ReadKey(true).Key.ToString().ToUpper();
+            Console.Clear();
             switch (key)
             {
                 case "SPACEBAR":
@@ -189,49 +204,19 @@ namespace FractalTerrainGen
                     break;
                 //----------------------------
                 case "S":
-                    int size;
-                    Console.Write("Input a new Size for the Map: ");
-                    string sizeInput = Console.ReadLine();
-                    while (Int32.TryParse(sizeInput, out size) == false)
-                    {
-                        Console.Write("Input a new Size for the Map: ");
-                        sizeInput = Console.ReadLine();
-                    }
-                    currentASCIISize = size;
+                    currentASCIISize = getSize();
                     break;
 
                 case "E":
-                    int seed;
-                    Console.Write("Input a seed to use for the Map Generator: ");
-                    string seedInput = Console.ReadLine();
-                    if (Int32.TryParse(seedInput, out seed))
-                        currentSeed = seed;
-                    else
-                        currentSeed = seedInput.GetHashCode();
+                    currentSeed = getSeed();
                     break;
 
                 case "C":
-                    float scale;
-                    Console.Write("Input a new Scale for the Map: ");
-                    string scaleInput = Console.ReadLine();
-                    while (Single.TryParse(scaleInput, out scale) == false)
-                    {
-                        Console.Write("Input a new Scale: ");
-                        scaleInput = Console.ReadLine();
-                    }
-                    currentScale = scale;
+                    currentScale = getScale();
                     break;
 
                 case "P":
-                    int pass;
-                    Console.Write("Input a new number of noise passes: ");
-                    string passInput = Console.ReadLine();
-                    while (Int32.TryParse(passInput, out pass) == false)
-                    {
-                        Console.Write("Input a new number of noise passes: ");
-                        passInput = Console.ReadLine();
-                    }
-                    currentPasses = pass;
+                    currentPasses = getPasses();
                     break;
                 //----------------------------
                 case "F":
@@ -277,7 +262,7 @@ namespace FractalTerrainGen
             regenRequired = true;
 
             Console.WriteLine("===== MENU =====");
-            Console.WriteLine("Space : Generate (N)ew Seed");
+            Console.WriteLine("Space : Generate New Seed");
 
             Console.WriteLine("S : Set (S)ize to a specific value");
             Console.WriteLine("E : Set S(e)ed to a specific value");
@@ -298,6 +283,7 @@ namespace FractalTerrainGen
             Console.WriteLine("; ' : Change Scale by {0}", DELTA_SMALL);
 
             string key = Console.ReadKey(true).Key.ToString().ToUpper();
+            Console.Clear();
             switch (key)
             {
                 case "SPACEBAR":
@@ -306,73 +292,42 @@ namespace FractalTerrainGen
                     break;
                 //----------------------------
                 case "S":
-                    int size;
-                    Console.Write("Input a new Size for the Map: ");
-                    string sizeInput = Console.ReadLine();
-                    while (Int32.TryParse(sizeInput, out size) == false)
-                    {
-                        Console.Write("Input a new Size for the Map: ");
-                        sizeInput = Console.ReadLine();
-                    }
-                    currentImageSize = size;
+                    currentImageSize = getSize();
                     break;
 
                 case "E":
-                    int seed;
-                    Console.Write("Input a Seed to use for the Map Generator: ");
-                    string seedInput = Console.ReadLine();
-                    if (Int32.TryParse(seedInput, out seed))
-                        currentSeed = seed;
-                    else
-                        currentSeed = seedInput.GetHashCode();
+                    currentSeed = getSeed();
                     break;
 
                 case "C":
-                    float scale;
-                    Console.Write("Input a new Scale for the Map: ");
-                    string scaleInput = Console.ReadLine();
-                    while (Single.TryParse(scaleInput, out scale) == false)
-                    {
-                        Console.Write("Input a new Scale: ");
-                        scaleInput = Console.ReadLine();
-                    }
-                    currentScale = scale;
+                    currentScale = getScale();
                     break;
 
                 case "P":
-                    int pass;
-                    Console.Write("Input a new number of noise passes: ");
-                    string passInput = Console.ReadLine();
-                    while (Int32.TryParse(passInput, out pass) == false)
-                    {
-                        Console.Write("Input a new number of noise passes: ");
-                        passInput = Console.ReadLine();
-                    }
-                    currentPasses = pass;
+                    currentPasses = getPasses();
                     break;
                 //----------------------------
                 case "N":
-                    testImageMap.SaveToImage(filePath, "Greyscale", ImageMap.WriteOption.Overwrite);
-                    regenRequired = false;
+                    OverwriteImage("Greyscale");
                     break;
 
                 case "R":
-                    testImageMap.SaveToImage(filePath, "Color", ImageMap.WriteOption.Overwrite);
-                    regenRequired = false;
+                    OverwriteImage("Color");
                     break;
 
                 case "T":
-                    testImageMap.SaveToImage(filePath, "Texture", ImageMap.WriteOption.Overwrite);
-                    regenRequired = false;
+                    OverwriteImage("Texture");
                     break;
 
                 case "M":
-                    testImageMap.SaveToImage(filePath, "Smooth", ImageMap.WriteOption.Overwrite);
-                    regenRequired = false;
+                    OverwriteImage("Smooth");
                     break;
                 //----------------------------
                 case "F":
-                    testImageMap.ToFile(filePath);
+                    if (testImageMap == null)
+                        NoTerrainError();
+                    else
+                        testImageMap.ToFile(filePath);
                     regenRequired = false;
                     break;
 
@@ -429,6 +384,70 @@ namespace FractalTerrainGen
             }
 
             return true;
+        }
+
+        static int getSize()
+        {
+            return getInt("Input a new Size for the Map: ");
+        }
+
+        static int getPasses()
+        {
+            return getInt("Input a new number of noise passes: ");
+        }
+
+        static int getInt(string msg)
+        {
+            int value;
+            Console.Write(msg);
+            string intInput = Console.ReadLine();
+            while (Int32.TryParse(intInput, out value) == false)
+            {
+                Console.Write(msg);
+                intInput = Console.ReadLine();
+            }
+            return value;
+        }
+
+        static int getSeed()
+        {
+            int seed;
+            Console.Write("Input a Seed to use for the Map Generator: ");
+            string seedInput = Console.ReadLine();
+            if (Int32.TryParse(seedInput, out seed))
+                return seed;
+            else
+                return seedInput.GetHashCode();
+        }
+
+        static float getScale()
+        {
+            float scale;
+            Console.Write("Input a new Scale for the Map: ");
+            string scaleInput = Console.ReadLine();
+            while (Single.TryParse(scaleInput, out scale) == false)
+            {
+                Console.Write("Input a new Scale: ");
+                scaleInput = Console.ReadLine();
+            }
+            return scale;
+        }
+
+        static void OverwriteImage(string function)
+        {
+            if (testImageMap == null)
+                NoTerrainError();
+            else
+                testImageMap.SaveToImage(filePath, function, ImageMap.WriteOption.Overwrite);
+            regenRequired = false;
+        }
+
+        static void NoTerrainError()
+        {
+            Console.WriteLine("Unable to comply, no terrain has been generated." + "\n"
+                            + "Please generate some terrain and try again!"
+                            );
+            Console.ReadKey(true);
         }
     }
 }

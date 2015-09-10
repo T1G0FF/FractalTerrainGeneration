@@ -164,20 +164,12 @@ namespace FractalTerrainGen
         private Bitmap ToImage(string fileName, Func<byte, Color> getTerrainColour)
         {
             Bitmap TerrainImage = new Bitmap(Size, Size);
-            Console.WriteLine("Writing to Image [{0}]", fileName);
+            NonBlockingConsole.WriteLine(String.Format("Writing to Image [{0}]...", fileName));
             int xMax = TerrainMap.GetUpperBound(0) + 1; // Returns Index
             int yMax = TerrainMap.GetUpperBound(1) + 1; // Number of elements = Index + 1
-            float percent = Size / 10;
-            int pass = 0;
-            Console.Write("\r" + "{0,-10}", "░░░░░░░░░░");
+
             for (int xCoord = 0; xCoord < xMax; xCoord++)
             {
-                if ((xCoord % percent) == 0)
-                {
-                    Console.Write("\r" + "{0}", new string('█', pass++));
-                }
-
-                Console.Write("\r" + "({0,4}, {1,4}) of ({2,4}, {3,4})", xCoord, "*", xMax, yMax);
                 for (int yCoord = 0; yCoord < yMax; yCoord++)
                 {
                     byte current = TerrainMap[xCoord, yCoord];
@@ -185,7 +177,7 @@ namespace FractalTerrainGen
                     TerrainImage.SetPixel(xCoord, yCoord, clr);
                 }
             }
-            Console.Write("\r" + "{0,-59}" + "\n", "Image Complete");
+            NonBlockingConsole.WriteLine(String.Format("\r" + "{0,-59}", String.Format("{0} Complete", fileName)));
             return TerrainImage;
         }
 
