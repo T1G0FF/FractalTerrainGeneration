@@ -11,12 +11,13 @@ namespace Noise
         static public byte[,] MultiPassNoise(int passes, int size, float scale, int seed, int TerrainHeight = byte.MaxValue)
         {
             int Divisor = 1;
-            float scaleTemp = (float)scale * Divisor;
+            float scaleTemp = scale * Divisor;
             byte[,] outputArray = Noise(size, scaleTemp, seed, TerrainHeight);
 
             for (int pass = 1; pass < passes; pass++)
             {   
                 Divisor *= 2;
+                scaleTemp = scale * Divisor;
 
                 byte[,] newPass = Noise(size, scaleTemp, seed, TerrainHeight);
                 double alpha = 0.75F;
