@@ -10,33 +10,29 @@ namespace Noise
         #region Public Methods
         static public byte[,] MultiPassNoise(int passes, int size, float scale, int seed, int TerrainHeight = byte.MaxValue)
         {
-            byte[][,] TerrainPasses = new byte[passes][,];
-
             int Divisor = 1;
-            for (int pass = 0; pass < passes; pass++)
-            {
-                float scaleTemp = (float)scale * Divisor; //(float)Math.Pow(scale, Divisor);
-                TerrainPasses[pass] = Noise(size, scaleTemp, seed, TerrainHeight);
+            float scaleTemp = (float)scale * Divisor;
+            byte[,] outputArray = Noise(size, scaleTemp, seed, TerrainHeight);
+
+            for (int pass = 1; pass < passes; pass++)
+            {   
                 Divisor *= 2;
+
+                byte[,] newPass = Noise(size, scaleTemp, seed, TerrainHeight);
+                double alpha = 0.75F;
+                for (int xCoord = 0; xCoord < size; xCoord++)
+                {
+                    for (int yCoord = 0; yCoord < size; yCoord++)
+                    {
+                        double p0 = outputArray[xCoord, yCoord];
+                        double p1 = newPass[xCoord, yCoord];
+                        double outputValue = Value.LinearInterpolation(p0, p1, alpha);
+                        outputArray[xCoord, yCoord] = (byte)outputValue;
+                    }
+                }
+                newPass = null;
             }
             Console.Clear();
-
-            byte[,] outputArray = new byte[size, size];
-            double alpha = 0.75F;
-            for (int xCoord = 0; xCoord < size; xCoord++)
-            {
-                for (int yCoord = 0; yCoord < size; yCoord++)
-                {
-                    double outputValue = TerrainPasses[0][xCoord, yCoord];
-                    for (int pass = 1; pass < passes; pass++)
-                    {
-                        double p0 = outputValue;
-                        double p1 = TerrainPasses[pass][xCoord, yCoord];
-                        outputValue = Value.LinearInterpolation(p0, p1, alpha);
-                    }
-                    outputArray[xCoord, yCoord] = (byte)outputValue;
-                }
-            }
 
             outputArray = NormaliseMap(outputArray);
 
