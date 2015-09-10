@@ -4,6 +4,7 @@ using System.IO;
 using xRay.Toolkit.Utilities;
 using Noise;
 using Functions;
+using System.Drawing.Imaging;
 
 namespace FractalTerrainGen
 {
@@ -28,7 +29,7 @@ namespace FractalTerrainGen
 
         public ImageMap(int seed, int size = DEFAULTSIZE, float scale = DEFAULTSCALE, float sealevel = DEFAULTSEALEVEL, int passes = DEFAULTPASSES)
         {
-            size = (int)Value.Clamp(size, 8, 65536);
+            size = (int)Value.Clamp(size, 8, 8192);
             
             for(int Power = 16; Power >= 3; Power--)
             {
@@ -80,6 +81,7 @@ namespace FractalTerrainGen
         {
             string fileName;
             string filePath;
+            PixelFormat formatType = PixelFormat.Format32bppRgb;
             Func<byte, Color> delegateName;
 
             switch (function)
@@ -115,8 +117,8 @@ namespace FractalTerrainGen
 
             if (File.Exists(filePath) == false || overwrite)
             {
-                Bitmap TerrainImage = ToImage(fileName, delegateName);
-                TerrainImage.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+                Bitmap TerrainImage = ToImage(fileName, formatType, delegateName);
+                TerrainImage.Save(filePath, ImageFormat.Png);
             }
         }
 
@@ -124,6 +126,7 @@ namespace FractalTerrainGen
         {
             string fileName;
             string filePath;
+            PixelFormat formatType = PixelFormat.Format32bppRgb;
             Func<byte, Color> delegateName;
 
             switch (function)
@@ -157,16 +160,16 @@ namespace FractalTerrainGen
 
             filePath = folderPath + fileName;
 
-            Bitmap TerrainImage = ToImage(fileName, delegateName);
+            Bitmap TerrainImage = ToImage(fileName, formatType, delegateName);
             TerrainImage.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
         }
 
-        private Bitmap ToImage(string fileName, Func<byte, Color> getTerrainColour)
+        private Bitmap ToImage(string fileName, PixelFormat pixelFormat, Func<byte, Color> getTerrainColour)
         {
-            Bitmap TerrainImage = new Bitmap(Size, Size);
+            Bitmap TerrainImage = new Bitmap(Size, Size, pixelFormat);
             NonBlockingConsole.WriteLine(String.Format("Writing to Image [{0}]...", fileName));
-            int xMax = TerrainMap.GetUpperBound(0) + 1; // Returns Index
-            int yMax = TerrainMap.GetUpperBound(1) + 1; // Number of elements = Index + 1
+            int xMax = TerrainMap.GetUpperBound(0); // Returns Index
+            int yMax = TerrainMap.GetUpperBound(1); // Number of elements = Index + 1
 
             for (int xCoord = 0; xCoord < xMax; xCoord++)
             {
