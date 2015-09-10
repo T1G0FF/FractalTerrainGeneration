@@ -150,9 +150,7 @@ namespace FractalTerrainGen
                                 ));
                     }
 
-                    Task[] imgTasks = imgTasksList.ToArray();
-
-                    Task.WaitAll(imgTasks);
+                    Task.WaitAll(imgTasksList.ToArray());
                 }
                 Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Sealevel: {3} | Passes: {4}", testImageMap.Seed, testImageMap.Size, testImageMap.Scale, testImageMap.SealevelScale, testImageMap.Passes);
             }
