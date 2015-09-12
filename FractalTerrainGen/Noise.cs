@@ -3,23 +3,29 @@ using Functions;
 
 namespace Noise
 {
+    static class Constants
+    {
+        public const int MINLEVEL = 0;
+        public const int MAXLEVEL = byte.MaxValue;
+    }
+
     static class Generate
     {
         static Random randGen;
-
+        
         #region Public Methods
-        static public byte[,] MultiPassNoise(int passes, int size, float scale, int seed, int TerrainHeight = byte.MaxValue)
+        static public byte[,] MultiPassNoise(int passes, int size, float scale, int seed, int maxHeight = Constants.MAXLEVEL)
         {
             int Divisor = 1;
-            float scaleTemp = scale * Divisor;
-            byte[,] outputArray = Noise(size, scaleTemp, seed, TerrainHeight);
+            float passScale = scale * Divisor;
+            byte[,] outputArray = Noise(size, passScale, seed, maxHeight);
 
             for (int pass = 1; pass < passes; pass++)
             {   
                 Divisor *= 2;
-                scaleTemp = scale * Divisor;
+                passScale = scale * Divisor;
 
-                byte[,] newPass = Noise(size, scaleTemp, seed, TerrainHeight);
+                byte[,] newPass = Noise(size, passScale, seed, maxHeight);
                 double alpha = 0.75F;
                 for (int xCoord = 0; xCoord < size; xCoord++)
                 {
@@ -35,13 +41,13 @@ namespace Noise
             }
             Console.Clear();
 
-            outputArray = NormaliseMap(outputArray);
+            outputArray = NormaliseNoiseArray(outputArray);
 
             return outputArray;
         }
 
         // http://gameprogrammer.com/fractal.html
-        static public byte[,] Noise(int size, float deltaTerrain, int seed, int TerrainHeight = byte.MaxValue)
+        static public byte[,] Noise(int size, float scale, int seed, int maxHeight = Constants.MAXLEVEL)
         {
             int Power = (int)Math.Log(size, 2);
             int Size = (int)Math.Pow(2, Power);
@@ -51,28 +57,28 @@ namespace Noise
             int Zero = 0;
             byte[,] output = new byte[Side, Side];
 
-            output[Zero, Zero] = getRandomElevation(TerrainHeight);
-            output[Zero, Size] = getRandomElevation(TerrainHeight);
-            output[Size, Zero] = getRandomElevation(TerrainHeight);
-            output[Size, Size] = getRandomElevation(TerrainHeight);
+            output[Zero, Zero] = getRandomElevation(maxHeight);
+            output[Zero, Size] = getRandomElevation(maxHeight);
+            output[Size, Zero] = getRandomElevation(maxHeight);
+            output[Size, Size] = getRandomElevation(maxHeight);
 
             int Stride = Size / 2;
-            double DeltaTerrain = deltaTerrain;
+            double passScale = scale;
 
-            Console.WriteLine("Generating {0}x{0} at {1:F2}...", Size, deltaTerrain);
+            Console.WriteLine("Generating {0}x{0} at {1:F2}...", Size, scale);
             int Pass = 0;
             while (Stride != 0)
             {
                 Console.Write("\r" + "Pass {0}", Pass++);
+                int passMaxHeight = (int)Math.Floor(passScale * maxHeight);
                 for (int y = Stride; y < Side; y += Stride)
                 {
                     for (int x = Stride; x < Side; x += Stride)
                     {
-                        int NewMaxTerrainHeight = (int)Math.Floor(DeltaTerrain * TerrainHeight);
-                        int ElevationSeed = getRandomElevation(NewMaxTerrainHeight);
+                        int ElevationSeed = getRandomElevation(passMaxHeight);
                         int ExistingAverage = avgSquareValues(ref output, x, y, Stride);
-                        int NewTerrainHeight = ElevationSeed + ExistingAverage;
-                        output[x, y] = (byte)(NewTerrainHeight % 255);
+                        int NewElevation = ElevationSeed + ExistingAverage;
+                        output[x, y] = (byte)(NewElevation % 255);
                         x += Stride;
                     }
                     y += Stride;
@@ -86,11 +92,10 @@ namespace Noise
                     {
                         if (toggle && x == 0) { x += Stride; }
 
-                        int NewMaxTerrainHeight = (int)Math.Floor(DeltaTerrain * TerrainHeight);
-                        int ElevationSeed = getRandomElevation(NewMaxTerrainHeight);
+                        int ElevationSeed = getRandomElevation(passMaxHeight);
                         int ExistingAverage = avgDiamondValues(ref output, x, y, Stride);
-                        int NewTerrainHeight = ElevationSeed + ExistingAverage;
-                        output[x, y] = (byte)(NewTerrainHeight % 255);
+                        int NewElevation = ElevationSeed + ExistingAverage;
+                        output[x, y] = (byte)(NewElevation % 255);
 
                         // Wraps Edges
                         if (x == 0) { output[Size, y] = output[x, y]; }
@@ -100,7 +105,7 @@ namespace Noise
                     }
                 }
 
-                DeltaTerrain = DeltaTerrain / 2;
+                passScale = passScale / 2;
 
                 Stride = Stride / 2;
             }
@@ -161,7 +166,7 @@ namespace Noise
 
         static private byte getRandomElevation()
         {
-            return getRandomElevation(0, byte.MaxValue);
+            return getRandomElevation(Constants.MINLEVEL, Constants.MAXLEVEL);
         }
 
         static private byte getRandomElevation(int max)
@@ -179,18 +184,18 @@ namespace Noise
             return (byte)((rand + min));
         }
 
-        static private byte[,] NormaliseMap(byte[,] TerrainMap)
+        static private byte[,] NormaliseNoiseArray(byte[,] NoiseArray)
         {
-            int min = byte.MaxValue;
-            int max = 0;
+            int min = Constants.MAXLEVEL;
+            int max = Constants.MINLEVEL;
 
-            int xMax = TerrainMap.GetUpperBound(0) + 1;
-            int yMax = TerrainMap.GetUpperBound(1) + 1;
+            int xMax = NoiseArray.GetUpperBound(0) + 1;
+            int yMax = NoiseArray.GetUpperBound(1) + 1;
             for (int xCoord = 0; xCoord < xMax; xCoord++)
             {
                 for (int yCoord = 0; yCoord < yMax; yCoord++)
                 {
-                    int currentValue = TerrainMap[xCoord, yCoord];
+                    int currentValue = NoiseArray[xCoord, yCoord];
                     if (currentValue > max) max = currentValue;
                     if (currentValue < min) min = currentValue;
                 }
@@ -200,12 +205,12 @@ namespace Noise
             {
                 for (int yCoord = 0; yCoord < yMax; yCoord++)
                 {
-                    int currentValue = TerrainMap[xCoord, yCoord];
-                    TerrainMap[xCoord, yCoord] = (byte)Value.Normalise(currentValue, min, max, 0, byte.MaxValue);
+                    int currentValue = NoiseArray[xCoord, yCoord];
+                    NoiseArray[xCoord, yCoord] = (byte)Value.Normalise(currentValue, min, max, Constants.MINLEVEL, Constants.MAXLEVEL);
                 }
             }
 
-            return TerrainMap;
+            return NoiseArray;
         }
         #endregion
     }
