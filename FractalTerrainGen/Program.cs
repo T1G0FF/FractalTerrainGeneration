@@ -31,8 +31,8 @@ namespace FractalTerrainGen
         // Image Map
         static ImageMap testImageMap;
         static bool newSealevel = false;
-        static int currentImageSize = ImageMap.DEFAULTSIZE;
-        static float currentSealevel = ImageMap.DEFAULTSEALEVEL;
+        static int currentImageSize = ImageMap.DEFAULT_SIZE;
+        static float currentSealevel = ImageMap.DEFAULT_SEALEVEL;
 
         // ASCII Map
         static ASCIIMap testASCIIMap;
@@ -180,13 +180,13 @@ namespace FractalTerrainGen
             Console.WriteLine("Space : Generate New Seed");
 
             Console.WriteLine("S : Set (S)ize to a specific value");
-            Console.WriteLine("E : Set S(e)ed to a specific value");
-            Console.WriteLine("C : Set S(c)ale to a specific value");
+            Console.WriteLine("E : Set S(E)ed to a specific value");
+            Console.WriteLine("C : Set S(C)ale to a specific value");
             Console.WriteLine("P : Set the number of noise generation (P)asses");
 
             Console.WriteLine("F : Save Noise values to CSV (F)ile");
             Console.WriteLine("D : Reset to (D)efaults");
-            Console.WriteLine("Q | Esc : Quit");
+            Console.WriteLine("Q | Esc : (Q)uit");
             Console.WriteLine("----------------");
             Console.WriteLine("< > : Halve/Double map size");
             Console.WriteLine("; ' : Change Scale by {0}", DELTA_SMALL);
@@ -263,8 +263,9 @@ namespace FractalTerrainGen
             Console.WriteLine("Space : Generate New Seed");
 
             Console.WriteLine("S : Set (S)ize to a specific value");
-            Console.WriteLine("E : Set S(e)ed to a specific value");
-            Console.WriteLine("C : Set S(c)ale to a specific value");
+            Console.WriteLine("E : Set S(E)ed to a specific value");
+            Console.WriteLine("C : Set S(C)ale to a specific value");
+            Console.WriteLine("L : Set Sea(L)evel to a specific value");
             Console.WriteLine("P : Set the number of noise generation (P)asses");
 
             Console.WriteLine("N : Save (N)oise Image");
@@ -273,12 +274,11 @@ namespace FractalTerrainGen
 
             Console.WriteLine("F : Save Noise values to CSV (F)ile");
             Console.WriteLine("D : Reset to (D)efaults");
-            Console.WriteLine("Q | Esc : Quit");
+            Console.WriteLine("Q | Esc : (Q)uit");
             Console.WriteLine("----------------");
             Console.WriteLine("< > : Halve/Double map size");
             Console.WriteLine("- + : Change Sea level by {0}", DELTA_SMALL);
             Console.WriteLine("[ ] : Change Sea level by {0}", DELTA_VERYSMALL);
-            Console.WriteLine("; ' : Change Scale by {0}", DELTA_SMALL);
 
             string key = Console.ReadKey(true).Key.ToString().ToUpper();
             Console.Clear();
@@ -299,6 +299,11 @@ namespace FractalTerrainGen
 
                 case "C":
                     currentScale = getScale();
+                    break;
+
+                case "L":
+                    currentSealevel = getSealevel();
+                    newSealevel = true;
                     break;
 
                 case "P":
@@ -330,8 +335,8 @@ namespace FractalTerrainGen
                     break;
 
                 case "D":
-                    currentImageSize = ImageMap.DEFAULTSIZE;
-                    currentSealevel = ImageMap.DEFAULTSEALEVEL;
+                    currentImageSize = ImageMap.DEFAULT_SIZE;
+                    currentSealevel = ImageMap.DEFAULT_SEALEVEL;
                     currentPasses = BaseMap.DEFAULTPASSES;
                     currentScale = BaseMap.DEFAULTSCALE;
                     break;
@@ -360,6 +365,7 @@ namespace FractalTerrainGen
                     newSealevel = true;
                     break;
 
+                    /*
                 case "OEM7": // '
                     currentScale += DELTA_SMALL;
                     break;
@@ -367,6 +373,7 @@ namespace FractalTerrainGen
                 case "OEM1": // ;
                     currentScale -= DELTA_SMALL;
                     break;
+                    */
 
                 case "OEMPERIOD": // .
                     currentImageSize *= 2;
@@ -394,6 +401,16 @@ namespace FractalTerrainGen
             return getInt("Input a new number of noise passes: ");
         }
 
+        static float getScale()
+        {
+            return getFloat("Input a new Scale for the Map: ");
+        }
+
+        static float getSealevel()
+        {
+            return getFloat("Input a new Sea level for the Map (0 - 1): ");
+        }
+
         static int getInt(string msg)
         {
             int value;
@@ -418,14 +435,14 @@ namespace FractalTerrainGen
                 return seedInput.GetHashCode();
         }
 
-        static float getScale()
+        static float getFloat(string msg)
         {
             float scale;
-            Console.Write("Input a new Scale for the Map: ");
+            Console.Write(msg);
             string scaleInput = Console.ReadLine();
             while (Single.TryParse(scaleInput, out scale) == false)
             {
-                Console.Write("Input a new Scale: ");
+                Console.Write(msg);
                 scaleInput = Console.ReadLine();
             }
             return scale;
