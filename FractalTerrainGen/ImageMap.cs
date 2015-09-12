@@ -60,10 +60,10 @@ namespace FractalTerrainGen
 
             // (2^Passes * Scale * MAXVALUE) must be less than (int.MaxValue)
 
-            double MaxPasses = Math.Log(int.MaxValue / (scale * TERRAIN_HEIGHT), 2);
-            if(MaxPasses < 0) MaxPasses = 1;
+            double MaxPasses = Generate.getMaxPasses(scale);
             Passes = (int)Value.Clamp(passes, 1, MaxPasses);
-            double MaxScale = int.MaxValue / (Math.Pow(2, Passes) * TERRAIN_HEIGHT);
+
+            double MaxScale = Generate.getMaxScale(Passes);
             Scale = (float)Value.Clamp(scale, MaxScale);
 
             if (Passes != passes || Scale != scale)

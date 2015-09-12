@@ -112,6 +112,19 @@ namespace Noise
             Console.Write("\r" + "Generation Complete!" + "\n");
             return output;
         }
+
+        static public double getMaxPasses(double scale)
+        {   // (2^Passes * Scale * MAXVALUE) must be less than (int.MaxValue)
+            double MaxPasses = Math.Log(int.MaxValue / (scale * Constants.MAXLEVEL), 2);
+            if (MaxPasses < 0) MaxPasses = 1;
+            return MaxPasses;
+        }
+
+        static public double getMaxScale(double passes)
+        {   // (2^Passes * Scale * MAXVALUE) must be less than (int.MaxValue)
+            double MaxScale = int.MaxValue / (Math.Pow(2, passes) * Constants.MAXLEVEL);
+            return MaxScale;
+        }
         #endregion
 
         #region Private Methods
