@@ -7,8 +7,12 @@ namespace FractalTerrainGen
     class Game
     {
         // Program properties
+#if DEBUG
         static string userprofile = Environment.GetEnvironmentVariable("USERPROFILE");
         static string filePath = userprofile + @"\Desktop\Maps\";
+#else
+        static string filePath = @".\Maps\";
+#endif
         static bool regenRequired = true;
         static bool consoleMode = false;
         static bool saveAll = false;
