@@ -11,15 +11,16 @@ namespace FractalTerrainGen
     class ImageMap : BaseMap
     {
         #region Public
-        public const int DEFAULTSIZE = 512;
-        public const float DEFAULTSEALEVEL = 0.61F;
-        public const byte TERRAINHEIGHT = byte.MaxValue;
+        public const int DEFAULT_SIZE = 512;
+        public const int MAX_SIZE = 8192; // Size^2 * 32 Bits per Pixel = File Size (256MB limit)
+        public const float DEFAULT_SEALEVEL = 0.61F;
+        public const byte TERRAIN_HEIGHT = Constants.MAXLEVEL;
 
         public enum WriteOption { None, Overwrite, SaveSeperate }
         
         public float SealevelScale { get; private set; }
-        byte Sealevel { get { return (byte)Math.Floor((double)TERRAINHEIGHT * SealevelScale); } }
-        byte Mountains { get { return (byte)Math.Floor((double)(Sealevel + ((TERRAINHEIGHT - Sealevel) * 0.7))); } }
+        byte Sealevel { get { return (byte)Math.Floor((double)TERRAIN_HEIGHT * SealevelScale); } }
+        byte Mountains { get { return (byte)Math.Floor((Sealevel + ((TERRAIN_HEIGHT - Sealevel) * 0.7D))); } }
         #endregion
 
         #region Constructors
@@ -27,8 +28,15 @@ namespace FractalTerrainGen
             : this(Guid.NewGuid().GetHashCode())
         { }
 
-        public ImageMap(int seed, int size = DEFAULTSIZE, float scale = DEFAULTSCALE, float sealevel = DEFAULTSEALEVEL, int passes = DEFAULTPASSES)
+        public ImageMap(int seed, int size = DEFAULT_SIZE, float scale = DEFAULTSCALE, float sealevel = DEFAULT_SEALEVEL, int passes = DEFAULTPASSES)
         {
+            bool changes = false;
+
+            if (size > 8192)
+            {
+                Console.WriteLine("Sizes above 8192 cause Bitmap files greater than 1GB to generate.");
+                changes = true;
+            }
             size = (int)Value.Clamp(size, 8, 8192);
             
             for(int Power = 16; Power >= 3; Power--)
@@ -42,14 +50,37 @@ namespace FractalTerrainGen
                 }
             }
 
-            Scale = (float)Value.Clamp(scale, 255);
-
             Seed = seed;
-
             SealevelScale = (float)Value.Clamp(sealevel);
+            if (SealevelScale != sealevel)
+            {
+                Console.WriteLine("Sealevel must be between 0 and 1 (0 < {0} < 1)", SealevelScale);
+                changes = true;
+            }
 
-            if (passes < 1) passes = 1;
-            Passes = passes;
+            // (2^Passes * Scale * MAXVALUE) must be less than (int.MaxValue)
+
+            double MaxPasses = Math.Log(int.MaxValue / (scale * TERRAIN_HEIGHT), 2);
+            if(MaxPasses < 0) MaxPasses = 1;
+            Passes = (int)Value.Clamp(passes, 1, MaxPasses);
+            double MaxScale = int.MaxValue / (Math.Pow(2, Passes) * TERRAIN_HEIGHT);
+            Scale = (float)Value.Clamp(scale, MaxScale);
+
+            if (Passes != passes || Scale != scale)
+            {
+                double limit = (int)(TERRAIN_HEIGHT * MaxScale * Math.Pow(2, Passes));
+                Console.WriteLine("Passes is now {0} and", Passes);
+                Console.WriteLine("Scale is now {0} to ensure that:", Scale);
+                Console.WriteLine("(MaxNoise * Scale * 2^Passes) <= int.MaxValue");
+                Console.WriteLine("({0} * {1} * 2^{2}) = {3} <= {4}", TERRAIN_HEIGHT, (int)MaxScale, Passes, (int)limit, int.MaxValue);
+                changes = true;
+            }
+
+            if(changes)
+            {
+                Console.ReadKey(true);
+                Console.Clear();
+            }
 
             TerrainMap = Generate.MultiPassNoise(Passes, Size, Scale, Seed);
         }
@@ -161,7 +192,7 @@ namespace FractalTerrainGen
             filePath = folderPath + fileName;
 
             Bitmap TerrainImage = ToImage(fileName, formatType, delegateName);
-            TerrainImage.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+            TerrainImage.Save(filePath, ImageFormat.Png);
         }
 
         private Bitmap ToImage(string fileName, PixelFormat pixelFormat, Func<byte, Color> getTerrainColour)
@@ -196,7 +227,7 @@ namespace FractalTerrainGen
 
             if (currentElevation > Mountains)
             {
-                Divide = (int)Math.Floor((TERRAINHEIGHT - Mountains) / 4D);
+                Divide = (int)Math.Floor((TERRAIN_HEIGHT - Mountains) / 4D);
                 if (currentElevation < Mountains + (Divide * 1))
                     result = Color.FromArgb(128, 128, 128);
                 else if (currentElevation < Mountains + (Divide * 2))
@@ -254,7 +285,7 @@ namespace FractalTerrainGen
             }
             else if (currentElevation <= Mountains)
             {
-                double elev = Value.Normalise(currentElevation, Sandlevel, TERRAINHEIGHT, 0.25, 0.75);
+                double elev = Value.Normalise(currentElevation, Sandlevel, TERRAIN_HEIGHT, 0.25, 0.75);
                 //double sat = Block.GetSaturation();
                 Block = RGBHSL.SetSaturation(Block, elev);
                 return Block;
@@ -304,7 +335,7 @@ namespace FractalTerrainGen
             byte R, G, B;
             if (currentElevation > Mountains)
             {
-                byte temp = Pixel.GradientDown(currentElevation, Mountains, TERRAINHEIGHT, 128, 211);
+                byte temp = Pixel.GradientDown(currentElevation, Mountains, TERRAIN_HEIGHT, 128, 211);
                 R = temp;
                 G = temp;
                 B = temp;
