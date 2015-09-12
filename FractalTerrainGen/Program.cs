@@ -104,6 +104,9 @@ namespace FractalTerrainGen
             {
                 testASCIIMap = new ASCIIMap(currentSeed, currentASCIISize, currentScale, currentPasses);
                 Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Passes: {3}", testASCIIMap.Seed, testASCIIMap.Size, testASCIIMap.Scale, testASCIIMap.Passes);
+                currentASCIISize = testASCIIMap.Size;
+                currentScale = testASCIIMap.Scale;
+                currentPasses = testASCIIMap.Passes;
             }
             testASCIIMap.Display();
         }
@@ -153,6 +156,10 @@ namespace FractalTerrainGen
                     Task.WaitAll(imgTasksList.ToArray());
                 }
                 Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Sealevel: {3} | Passes: {4}", testImageMap.Seed, testImageMap.Size, testImageMap.Scale, testImageMap.SealevelScale, testImageMap.Passes);
+                currentImageSize = testImageMap.Size;
+                currentScale = testImageMap.Scale;
+                currentSealevel = testImageMap.SealevelScale;
+                currentPasses = testImageMap.Passes;
             }
         }
 
