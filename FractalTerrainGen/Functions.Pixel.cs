@@ -5,11 +5,17 @@ namespace Functions
 {
     static class Pixel
     {
-        static public Color TransformHue(Color colorIn, byte Hue)
+        /// <summary>
+        /// Transforms a given RGB colour by a given hue.
+        /// </summary>
+        /// <param name="colorIn">The colour to transform.</param>
+        /// <param name="Hue">The number of degrees to transform the colour by.</param>
+        /// <returns>The transformed colour.</returns>
+        /// <seealso cref="http://stackoverflow.com/questions/8507885/shift-hue-of-an-rgb-color"/>
+        static public Color TransformHue(Color colorIn, int Hue)
         {
-            // http://stackoverflow.com/questions/8507885/shift-hue-of-an-rgb-color
-            float cosA = (float)Math.Cos(Hue * Math.PI / 180);
-            float sinA = (float)Math.Sin(Hue * Math.PI / 180);
+            float cosA = (float)Math.Cos(Hue * Math.PI / 180);  // Convert degrees to radians
+            float sinA = (float)Math.Sin(Hue * Math.PI / 180);  // Convert degrees to radians
             double[][] matrix = new double[][] {
                 new double[] { cosA + (1.0F - cosA) / 3.0F, 1.0F / 3.0F * (1.0F - cosA) - Math.Sqrt(1.0F / 3.0F) * sinA, 1.0F / 3.0F * (1.0F - cosA) + Math.Sqrt(1.0F / 3.0F) * sinA },
                 new double[] { 1.0F / 3.0F * (1.0F - cosA) + Math.Sqrt(1.0F / 3.0F) * sinA, cosA + 1.0F / 3.0F * (1.0F - cosA), 1.0F / 3.0F * (1.0F - cosA) - Math.Sqrt(1.0F / 3.0F) * sinA },
@@ -23,22 +29,25 @@ namespace Functions
             return Color.FromArgb(R, G, B);
         }
 
-        static public byte GradientUp(byte value, byte min, byte max, byte minColor, byte maxColor)
+        static public byte Gradient(byte value, byte min, byte max, byte Color1, byte Color2)
         {
-            byte deltaColor = (byte)(maxColor - minColor);
-            return (byte)(maxColor - getColorBlend(value, min, max, deltaColor));
-        }
-
-        static public byte GradientDown(byte value, byte min, byte max, byte minColor, byte maxColor)
-        {
-            byte deltaColor = (byte)(maxColor - minColor);
-            return (byte)(minColor + getColorBlend(value, min, max, deltaColor));
+            if(Color1 > Color2)
+            {
+                byte deltaColor = (byte)(Color1 - Color2);
+                return (byte)Value.Clamp((Color1 - getColorBlend(value, min, max, deltaColor)), 255);
+            }
+            else
+            {
+                byte deltaColor = (byte)(Color2 - Color1);
+                return (byte)Value.Clamp((Color1 + getColorBlend(value, min, max, deltaColor)), 255);
+            }
+            
         }
 
         static private byte getColorBlend(byte value, byte min, byte max, byte colorDelta)
         {
             double colorRatio = (double)(value - min) / (double)(max - min);
-            return (byte)Math.Round(colorRatio * colorDelta);
+            return (byte)Value.Clamp(Math.Round(colorRatio * colorDelta), 255);
         }
     }
 }
