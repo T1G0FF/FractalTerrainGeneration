@@ -28,7 +28,7 @@ namespace FractalTerrainGen
             : this(Guid.NewGuid().GetHashCode())
         { }
 
-        public ImageMap(int seed, int size = DEFAULT_SIZE, float scale = DEFAULTSCALE, float sealevel = DEFAULT_SEALEVEL, int passes = DEFAULTPASSES)
+        public ImageMap(int seed, int size = DEFAULT_SIZE, float scale = DEFAULT_SCALE, float sealevel = DEFAULT_SEALEVEL, int passes = DEFAULT_PASSES)
         {
             bool changes = false;
 
@@ -39,7 +39,7 @@ namespace FractalTerrainGen
             }
             size = (int)Value.Clamp(size, 8, 8192);
             
-            for(int Power = 16; Power >= 3; Power--)
+            for(int Power = 13; Power >= 3; Power--)
             {
                 int powerOfTwo = (int)Math.Pow(2, Power);
 
@@ -128,9 +128,14 @@ namespace FractalTerrainGen
                     delegateName = BlockGradient;
                     break;
 
-                case "Texture":
-                    fileName = String.Format("{0}_{1}_{2:F2}_{3:F2}_{4}_texture.png", Seed, Size, Scale, SealevelScale, Passes);
+                case "BlockTexture":
+                    fileName = String.Format("{0}_{1}_{2:F2}_{3:F2}_{4}_blocktexture.png", Seed, Size, Scale, SealevelScale, Passes);
                     delegateName = TexturedBlockGradient;
+                    break;
+
+                case "SmoothTexture":
+                    fileName = String.Format("{0}_{1}_{2:F2}_{3:F2}_{4}_smoothtexture.png", Seed, Size, Scale, SealevelScale, Passes);
+                    delegateName = TexturedSmoothGradient;
                     break;
 
                 case "Smooth":
@@ -173,9 +178,14 @@ namespace FractalTerrainGen
                     delegateName = BlockGradient;
                     break;
 
-                case "Texture":
-                    fileName = String.Format("CurrentMap_texture.png");
+                case "BlockTexture":
+                    fileName = String.Format("CurrentMap_blocktexture.png");
                     delegateName = TexturedBlockGradient;
+                    break;
+
+                case "SmoothTexture":
+                    fileName = String.Format("CurrentMap_smoothtexture.png");
+                    delegateName = SmoothGradient;
                     break;
 
                 case "Smooth":
@@ -266,33 +276,42 @@ namespace FractalTerrainGen
             }
             return result;
         }
-
         private Color TexturedBlockGradient(byte currentElevation)
         {
             Color Block = BlockGradient(currentElevation);
+            return TexturedGradient(Block, currentElevation);
+        }
 
+        private Color TexturedSmoothGradient(byte currentElevation)
+        {
+            Color Smooth = SmoothGradient(currentElevation);
+            return TexturedGradient(Smooth, currentElevation);
+        }
+
+        private Color TexturedGradient(Color currentColor, byte currentElevation)
+        {
             // Custom
             int Sandlevel = (int)(Sealevel + Math.Floor((Mountains - Sealevel) / 4D));
             if (currentElevation < Sealevel)
             {
                 double elev = Value.Normalise(currentElevation, 0, Sealevel, 0.25, 0.75);
-                Block = RGBHSL.SetBrightness(Block, elev);
-                return Block;
+                currentColor = RGBHSL.SetBrightness(currentColor, elev);
+                return currentColor;
             }
             else if (currentElevation < Sandlevel)
             {
-                return Block;
+                return currentColor;
             }
             else if (currentElevation <= Mountains)
             {
                 double elev = Value.Normalise(currentElevation, Sandlevel, TERRAIN_HEIGHT, 0.25, 0.75);
-                //double sat = Block.GetSaturation();
-                Block = RGBHSL.SetSaturation(Block, elev);
-                return Block;
+                //double sat = currentColor.GetSaturation();
+                currentColor = RGBHSL.SetSaturation(currentColor, elev);
+                return currentColor;
             }
             else
             {
-                return Block;
+                return currentColor;
             }
 
             /*
@@ -300,61 +319,94 @@ namespace FractalTerrainGen
             if (currentElevation < Sealevel)
             {
                 double elev = Value.Normalise(currentElevation, 0, Sealevel, 0.25, 0.75);
-                Block = RGBHSL.SetBrightness(Block, elev);
-                return Block;
+                currentColor = RGBHSL.SetBrightness(currentColor, elev);
+                return currentColor;
             }
             else
             {
-                return Block;
+                return currentColor;
             }
 
             // Average
-            byte R = (byte)((Block.R + currentElevation) / 2);
-            byte G = (byte)((Block.G + currentElevation) / 2);
-            byte B = (byte)((Block.B + currentElevation) / 2);
+            byte R = (byte)((currentColor.R + currentElevation) / 2);
+            byte G = (byte)((currentColor.G + currentElevation) / 2);
+            byte B = (byte)((currentColor.B + currentElevation) / 2);
             return Color.FromArgb(R, G, B);
 
             // Linear Interpolation
             float alpha = 0.25F;
-            byte R = (byte)Value.LinearInterpolation(Block.R, currentElevation,alpha);
-            byte G = (byte)Value.LinearInterpolation(Block.G, currentElevation,alpha);
-            byte B = (byte)Value.LinearInterpolation(Block.B, currentElevation,alpha);
+            byte R = (byte)Value.LinearInterpolation(currentColor.R, currentElevation,alpha);
+            byte G = (byte)Value.LinearInterpolation(currentColor.G, currentElevation,alpha);
+            byte B = (byte)Value.LinearInterpolation(currentColor.B, currentElevation,alpha);
             return Color.FromArgb(R, G, B);
 
             // Hue Transform
-            return Pixel.TransformHue(Block, currentElevation);
+            return Pixel.TransformHue(currentColor, currentElevation);
 
             // Brightness Transform
             double brightness = Value.Normalise(currentElevation, 0, TERRAINHEIGHT, .25, .75);
-            return RGBHSL.SetBrightness(Block, brightness);
+            return RGBHSL.SetBrightness(currentColor, brightness);
             */
         }
 
         private Color SmoothGradient(byte currentElevation)
         {
             byte R, G, B;
-            if (currentElevation > Mountains)
+            if (currentElevation < Sealevel)
             {
-                byte temp = Pixel.GradientDown(currentElevation, Mountains, TERRAIN_HEIGHT, 128, 211);
-                R = temp;
-                G = temp;
-                B = temp;
+                int Divide = (int)Math.Floor((Sealevel) / 4D);
+                byte DropOff = (byte)(Divide * 3);
+
+                Color deepocean = Color.FromArgb(18, 25, 35);
+                Color midocean = Color.FromArgb(49, 73, 107);
+                Color seashore = Color.FromArgb(41, 110, 156);
+
+                if (currentElevation < DropOff)
+                {
+                    R = Pixel.Gradient(currentElevation, 0, DropOff, deepocean.R, midocean.R);
+                    G = Pixel.Gradient(currentElevation, 0, DropOff, deepocean.G, midocean.G);
+                    B = Pixel.Gradient(currentElevation, 0, DropOff, deepocean.B, midocean.B);
+                }
+                else
+                {
+                    R = Pixel.Gradient(currentElevation, DropOff, Sealevel, midocean.R, seashore.R);
+                    G = Pixel.Gradient(currentElevation, DropOff, Sealevel, midocean.G, seashore.G);
+                    B = Pixel.Gradient(currentElevation, DropOff, Sealevel, midocean.B, seashore.B);
+                }
+
+                
             }
-            else if (currentElevation < Sealevel)
+            else if (currentElevation > Mountains)
             {
-                R = Pixel.GradientDown(currentElevation, 0, Sealevel, 135, 100);
-                G = Pixel.GradientDown(currentElevation, 0, Sealevel, 206, 149);
-                B = Pixel.GradientDown(currentElevation, 0, Sealevel, 250, 237);
+                Color lowermountains = Color.FromArgb(39, 44, 36);
+                Color uppermountains = Color.FromArgb(177, 181, 189);
+
+                R = Pixel.Gradient(currentElevation, Mountains, TERRAIN_HEIGHT, lowermountains.R, uppermountains.R);
+                G = Pixel.Gradient(currentElevation, Mountains, TERRAIN_HEIGHT, lowermountains.G, uppermountains.G);
+                B = Pixel.Gradient(currentElevation, Mountains, TERRAIN_HEIGHT, lowermountains.B, uppermountains.B);
             }
             else
             {
-                if (currentElevation < (Sealevel + (Math.Floor((Mountains - Sealevel) / 4D))))
+                int Divide = (int)Math.Floor((Mountains - Sealevel) / 4D);
+                byte LandStart = (byte)(Sealevel + (Divide * 1));
+                if (currentElevation < LandStart)
                 {
-                    return Color.SeaShell;
+                    Color shoreline = Color.FromArgb(41, 110, 156);
+                    Color beachsand = Color.FromArgb(209, 194, 166);
+
+                    R = Pixel.Gradient(currentElevation, Sealevel, LandStart, shoreline.R, beachsand.R);
+                    G = Pixel.Gradient(currentElevation, Sealevel, LandStart, shoreline.G, beachsand.G);
+                    B = Pixel.Gradient(currentElevation, Sealevel, LandStart, shoreline.B, beachsand.B);
                 }
-                R = Pixel.GradientUp(currentElevation, Sealevel, Mountains, 60, 46);
-                G = Pixel.GradientUp(currentElevation, Sealevel, Mountains, 179, 139);
-                B = Pixel.GradientUp(currentElevation, Sealevel, Mountains, 113, 87);
+                else
+                {
+                    Color grass = Color.FromArgb(57, 81, 57);
+                    Color forest = Color.FromArgb(30, 44, 35);
+
+                    R = Pixel.Gradient(currentElevation, LandStart, Mountains, grass.R, forest.R);
+                    G = Pixel.Gradient(currentElevation, LandStart, Mountains, grass.G, forest.G);
+                    B = Pixel.Gradient(currentElevation, LandStart, Mountains, grass.B, forest.B);
+                }
             }
 
             return Color.FromArgb(R, G, B);
