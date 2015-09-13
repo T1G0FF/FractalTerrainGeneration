@@ -6,8 +6,8 @@ namespace FractalTerrainGen
 {
     class BaseMap
     {
-        public const float DEFAULTSCALE = 1.0F;
-        public const int DEFAULTPASSES = 3;
+        public const float DEFAULT_SCALE = 1.0F;
+        public const int DEFAULT_PASSES = 3;
 
         public byte[,] TerrainMap;
 
@@ -31,7 +31,7 @@ namespace FractalTerrainGen
                     }
                     sb.AppendLine();
                 }
-                sb.AppendFormat("Size: {0} Seed: {1}", Size, Seed);
+                sb.AppendFormat("Size: {0} Scale: {1} Seed: {2} Passes: {4}", Size, Scale, Seed, Passes);
                 sw.Write(sb.ToString());
             }
         }
