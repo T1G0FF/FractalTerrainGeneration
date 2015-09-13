@@ -19,9 +19,9 @@ namespace FractalTerrainGen
             thread.Start();
         }
 
-        public static void WriteLine(string value)
+        public static void WriteLine(string value, params object[] args)
         {
-            m_Queue.Add(value);
+            m_Queue.Add( String.Format(value, args) );
         }
     }
 }
