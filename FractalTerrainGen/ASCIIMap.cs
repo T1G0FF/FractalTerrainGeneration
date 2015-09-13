@@ -8,8 +8,8 @@ namespace FractalTerrainGen
     class ASCIIMap : BaseMap
     {
         #region Public
-        public const int DEFAULTSIZE = 16;
-        public const int TERRAINHEIGHT = 11;        //  ░  ▒  ▓
+        public const int DEFAULT_SIZE = 16;
+        public const int TERRAIN_HEIGHT = 10;        //  ░  ▒  ▓
 
 		Terrain SeaFloor    = new Terrain("Sea Floor",  '▒', 0, ConsoleColor.DarkBlue,     ConsoleColor.Black);
 
@@ -32,8 +32,7 @@ namespace FractalTerrainGen
 		Terrain Peaks       = new Terrain("Peaks",      '^', 9, ConsoleColor.White,        ConsoleColor.DarkGray);
 
 		Terrain Error		= new Terrain("Error",      '!', byte.MaxValue, ConsoleColor.DarkMagenta, ConsoleColor.Magenta);
-
-        
+                
         //Random randGen;
 
         public int Side { get { return Size - 1; } }
@@ -44,20 +43,30 @@ namespace FractalTerrainGen
             : this(Guid.NewGuid().GetHashCode())
         { }
 
-        public ASCIIMap(int seed, int size = DEFAULTSIZE, float scale = DEFAULTSCALE, int passes = DEFAULTPASSES)
+        public ASCIIMap(int seed, int size = DEFAULT_SIZE, float scale = DEFAULT_SCALE, int passes = DEFAULT_PASSES)
         {
-            if (size < 4) size = 4;
-            if (size > 128) size = 128;
-
-            int Power = (int)Math.Log(size, 2);
-            Size = (int)Math.Pow(2, Power);
-
-            Scale = (float)Value.Clamp(scale, 255);
-
             Seed = seed;
             //randGen = new Random(seed);
 
-            TerrainMap = Generate.MultiPassNoise(passes, Size, Scale, Seed);
+            size = (int)Value.Clamp(size, 4, 256);
+            for (int Power = 16; Power >= 3; Power--)
+            {
+                int powerOfTwo = (int)Math.Pow(2, Power);
+
+                if (size > (powerOfTwo * 0.9F))
+                {
+                    Size = powerOfTwo;
+                    break;
+                }
+            }
+
+            double MaxPasses = Generate.getMaxPasses(scale);
+            Passes = (int)Value.Clamp(passes, 1, MaxPasses);
+
+            double MaxScale = Generate.getMaxScale(Passes);
+            Scale = (float)Value.Clamp(scale, MaxScale);
+
+            TerrainMap = Generate.MultiPassNoise(Passes, Size, Scale, Seed);
         }
         #endregion
 
@@ -80,7 +89,7 @@ namespace FractalTerrainGen
 
         public Terrain getTerrain(int elevation)
         {
-            int elev = (int)Value.Normalise(elevation, 0, byte.MaxValue, 0, TERRAINHEIGHT);
+            int elev = (int)Value.Normalise(elevation, 0, byte.MaxValue, 0, TERRAIN_HEIGHT);
 
             if (elev <= SeaFloor.Elevation)
                 return SeaFloor;
