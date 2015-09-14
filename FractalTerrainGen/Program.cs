@@ -17,9 +17,11 @@ namespace FractalTerrainGen
         static bool consoleMode = false;
         static bool saveAll = false;
         static bool saveNoise = false;
-        static bool saveRegular = false;
-        static bool saveTexture = false;
+        static bool saveBlock = false;
+        static bool saveRealism = false;
+        static bool saveBlockTexture = false;
         static bool singleFileMode = true;
+        static string singlefiletype = "Block";
         
         // Shared
         static int currentSeed = Guid.NewGuid().GetHashCode();
@@ -84,13 +86,18 @@ namespace FractalTerrainGen
                             singleFileMode = false;
                             break;
                         case "-SR":
-                        case "--SAVEREGULAR":
-                            saveRegular = true;
+                        case "--SAVEREALISM":
+                            saveRealism = true;
+                            singleFileMode = false;
+                            break;
+                        case "-SB":
+                        case "--SAVEBLOCK":
+                            saveBlock = true;
                             singleFileMode = false;
                             break;
                         case "-ST":
                         case "--SAVETEXTURE":
-                            saveTexture = true;
+                            saveBlockTexture = true;
                             singleFileMode = false;
                             break;
                         case "-C":
@@ -123,7 +130,7 @@ namespace FractalTerrainGen
 
                 if (singleFileMode)
                 {
-                    testImageMap.SaveToImage(filePath, "Color");
+                    testImageMap.SaveToImage(filePath, singlefiletype);
                 }
                 else
                 {
@@ -141,15 +148,23 @@ namespace FractalTerrainGen
                         }
                     }
 
-                    if (saveAll || saveRegular)
+                    if (saveAll || saveRealism)
                     {
                         imgTasksList.Add(
                                 Task.Factory.StartNew(() =>
-                                    testImageMap.SaveToImage(filePath, "Colour", ImageMap.WriteOption.SaveSeperate)
+                                    testImageMap.SaveToImage(filePath, "Smooth", ImageMap.WriteOption.SaveSeperate)
                                 ));
                     }
 
-                    if (saveAll || saveTexture)
+                    if (saveAll || saveBlock)
+                    {
+                        imgTasksList.Add(
+                                Task.Factory.StartNew(() =>
+                                    testImageMap.SaveToImage(filePath, "Block", ImageMap.WriteOption.SaveSeperate)
+                                ));
+                    }
+
+                    if (saveAll || saveBlockTexture)
                     {
                         imgTasksList.Add(
                                 Task.Factory.StartNew(() =>

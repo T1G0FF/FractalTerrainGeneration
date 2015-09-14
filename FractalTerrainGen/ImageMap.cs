@@ -129,8 +129,7 @@ namespace FractalTerrainGen
                     delegateName = SmoothGradient;
                     break;
 
-                case "Color":
-                case "Colour":
+                case "Block":
                     fileName = String.Format("{0}_{1}_{2:F2}_{3:F2}_{4}_Contours.png", Seed, Size, Scale, SealevelScale, Passes);
                     delegateName = BlockGradient;
                     break;
@@ -179,8 +178,7 @@ namespace FractalTerrainGen
                     delegateName = SmoothGradient;
                     break;
 
-                case "Color":
-                case "Colour":
+                case "Block":
                     fileName = String.Format("CurrentMap_Contours.png");
                     delegateName = BlockGradient;
                     break;
