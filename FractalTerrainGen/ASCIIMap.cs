@@ -8,8 +8,13 @@ namespace FractalTerrainGen
     class ASCIIMap : BaseMap
     {
         #region Public
+        public const int MIN_SIZE = 4;
+        public const int MAX_SIZE = 128;
         public const int DEFAULT_SIZE = 16;
-        public const int TERRAIN_HEIGHT = 10;        //  ░  ▒  ▓
+        public const int TERRAIN_HEIGHT = 10;
+        private int MAX_POWER = (int)Math.Log(MAX_SIZE, 2); 
+        
+        //  ░  ▒  ▓
 
 		Terrain SeaFloor    = new Terrain("Sea Floor",  '▒', 0, ConsoleColor.DarkBlue,     ConsoleColor.Black);
 
@@ -48,8 +53,8 @@ namespace FractalTerrainGen
             Seed = seed;
             //randGen = new Random(seed);
 
-            size = (int)Value.Clamp(size, 4, 256);
-            for (int Power = 16; Power >= 3; Power--)
+            size = (int)Value.Clamp(size, 4, 128);
+            for (int Power = MAX_POWER; Power >= 2; Power--)
             {
                 int powerOfTwo = (int)Math.Pow(2, Power);
 
