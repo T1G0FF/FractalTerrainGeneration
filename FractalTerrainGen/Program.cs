@@ -23,8 +23,8 @@ namespace FractalTerrainGen
         
         // Shared
         static int currentSeed = Guid.NewGuid().GetHashCode();
-        static int currentPasses = BaseMap.DEFAULTPASSES;
-        static float currentScale = BaseMap.DEFAULTSCALE;
+        static int currentPasses = BaseMap.DEFAULT_PASSES;
+        static float currentScale = BaseMap.DEFAULT_SCALE;
 
         const float DELTA_VERYSMALL = 0.01F;
         const float DELTA_SMALL = 0.1F;
@@ -40,7 +40,7 @@ namespace FractalTerrainGen
 
         // ASCII Map
         static ASCIIMap testASCIIMap;
-        static int currentASCIISize = ASCIIMap.DEFAULTSIZE;
+        static int currentASCIISize = ASCIIMap.DEFAULT_SIZE;
 
         static void Main(string[] args)
         {
@@ -234,9 +234,9 @@ namespace FractalTerrainGen
                     break;
 
                 case "D":
-                    currentASCIISize = ASCIIMap.DEFAULTSIZE;
-                    currentPasses = BaseMap.DEFAULTPASSES;
-                    currentScale = BaseMap.DEFAULTSCALE;
+                    currentASCIISize = ASCIIMap.DEFAULT_SIZE;
+                    currentPasses = BaseMap.DEFAULT_PASSES;
+                    currentScale = BaseMap.DEFAULT_SCALE;
                     break;
 
                 case "Q":
@@ -280,8 +280,10 @@ namespace FractalTerrainGen
             Console.WriteLine("P : Set the number of noise generation (P)asses");
 
             Console.WriteLine("N : Save (N)oise Image");
-            Console.WriteLine("R : Save (R)egular Image");
-            Console.WriteLine("T : Save (T)exture Image");
+            Console.WriteLine("R : Save (R)ealism Image");
+            Console.WriteLine("B : Save (B)lock Gradient Image");
+            //Console.WriteLine("G : Save Block Texture Image");
+            //Console.WriteLine("H : Save Smooth Texture Image");
 
             Console.WriteLine("F : Save Noise values to CSV (F)ile");
             Console.WriteLine("D : Reset to (D)efaults");
@@ -325,16 +327,20 @@ namespace FractalTerrainGen
                     OverwriteImage("Greyscale");
                     break;
 
-                case "R":
+                case "B":
                     OverwriteImage("Color");
                     break;
 
-                case "T":
-                    OverwriteImage("Texture");
+                case "R":
+                    OverwriteImage("Smooth");
                     break;
 
-                case "M":
-                    OverwriteImage("Smooth");
+                case "G":
+                    OverwriteImage("BlockTexture");
+                    break;
+
+                case "H":
+                    OverwriteImage("SmoothTexture");
                     break;
                 //----------------------------
                 case "F":
@@ -348,8 +354,8 @@ namespace FractalTerrainGen
                 case "D":
                     currentImageSize = ImageMap.DEFAULT_SIZE;
                     currentSealevel = ImageMap.DEFAULT_SEALEVEL;
-                    currentPasses = BaseMap.DEFAULTPASSES;
-                    currentScale = BaseMap.DEFAULTSCALE;
+                    currentPasses = BaseMap.DEFAULT_PASSES;
+                    currentScale = BaseMap.DEFAULT_SCALE;
                     break;
 
                 case "Q":
