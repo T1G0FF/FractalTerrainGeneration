@@ -29,17 +29,26 @@ namespace Functions
             return Color.FromArgb(R, G, B);
         }
 
-        static public byte Gradient(byte value, byte min, byte max, byte Color1, byte Color2)
+        static public Color Gradient(byte value, byte min, byte max, Color Colour1, Color Colour2)
         {
-            if(Color1 > Color2)
+            byte R = Gradient(value, min, max, Colour1.R, Colour2.R);
+            byte G = Gradient(value, min, max, Colour1.G, Colour2.G);
+            byte B = Gradient(value, min, max, Colour1.B, Colour2.B);
+
+            return Color.FromArgb(R, G, B);
+        }
+
+        static public byte Gradient(byte value, byte min, byte max, byte SubColour1, byte SubColour2)
+        {
+            if(SubColour1 > SubColour2)
             {
-                byte deltaColor = (byte)(Color1 - Color2);
-                return (byte)Value.Clamp((Color1 - getColorBlend(value, min, max, deltaColor)), 255);
+                byte deltaColour = (byte)(SubColour1 - SubColour2);
+                return (byte)Value.Clamp((SubColour1 - getColorBlend(value, min, max, deltaColour)), 255);
             }
             else
             {
-                byte deltaColor = (byte)(Color2 - Color1);
-                return (byte)Value.Clamp((Color1 + getColorBlend(value, min, max, deltaColor)), 255);
+                byte deltaColour = (byte)(SubColour2 - SubColour1);
+                return (byte)Value.Clamp((SubColour1 + getColorBlend(value, min, max, deltaColour)), 255);
             }
             
         }
