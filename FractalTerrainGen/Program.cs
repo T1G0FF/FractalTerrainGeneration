@@ -168,7 +168,7 @@ namespace FractalTerrainGen
                     {
                         imgTasksList.Add(
                                 Task.Factory.StartNew(() =>
-                                    testImageMap.SaveToImage(filePath, "Texture", ImageMap.WriteOption.SaveSeperate)
+                                    testImageMap.SaveToImage(filePath, "BlockTexture", ImageMap.WriteOption.SaveSeperate)
                                 ));
                     }
 
