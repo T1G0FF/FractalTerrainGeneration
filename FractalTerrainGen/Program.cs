@@ -174,10 +174,10 @@ namespace FractalTerrainGen
 
                     Task.WaitAll(imgTasksList.ToArray());
                 }
-                Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Sealevel: {3} | Passes: {4}", testImageMap.Seed, testImageMap.Size, testImageMap.Scale, testImageMap.SealevelScale, testImageMap.Passes);
+                Console.WriteLine("Seed: {0} | Size: {1} | Scale: {2} | Sealevel: {3} | Passes: {4}", testImageMap.Seed, testImageMap.Size, testImageMap.Scale, testImageMap.SeaLevelScale, testImageMap.Passes);
                 currentImageSize = testImageMap.Size;
                 currentScale = testImageMap.Scale;
-                currentSealevel = testImageMap.SealevelScale;
+                currentSealevel = testImageMap.SeaLevelScale;
                 currentPasses = testImageMap.Passes;
             }
         }
@@ -343,7 +343,7 @@ namespace FractalTerrainGen
                     break;
 
                 case "B":
-                    OverwriteImage("Color");
+                    OverwriteImage("Block");
                     break;
 
                 case "R":
